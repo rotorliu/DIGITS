@@ -1,4 +1,4 @@
-# Copyright (c) 2016, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2016-2017, NVIDIA CORPORATION.  All rights reserved.
 from __future__ import absolute_import
 
 from digits import utils
@@ -47,13 +47,13 @@ class DatasetForm(Form):
 
     image_width = wtforms.IntegerField(
         u'Image Width',
-        default=32,
+        default=50,
         validators=[validators.DataRequired()]
     )
 
     image_height = wtforms.IntegerField(
         u'Image Height',
-        default=32,
+        default=50,
         validators=[validators.DataRequired()]
     )
 

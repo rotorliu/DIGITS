@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2015-2016, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2015-2017, NVIDIA CORPORATION.  All rights reserved.
 """
 Functions for creating temporary LMDBs
 Used in test_views
@@ -32,7 +32,7 @@ import caffe_pb2  # noqa
 
 IMAGE_SIZE = 10
 TRAIN_IMAGE_COUNT = 100
-VAL_IMAGE_COUNT = 20
+VAL_IMAGE_COUNT = 250
 
 
 def create_lmdbs(folder, image_width=None, image_height=None, image_count=None):

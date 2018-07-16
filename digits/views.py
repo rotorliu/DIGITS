@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2014-2017, NVIDIA CORPORATION.  All rights reserved.
 from __future__ import absolute_import
 
 import glob
@@ -104,6 +104,7 @@ def home(tab=2):
         for extension in data_extensions:
             ext_category = extension.get_category()
             ext_title = extension.get_title()
+            ext_title = ext_title[:21] + ' ..' if len(ext_title) > 21 else ext_title
             ext_id = extension.get_id()
             if ext_category not in new_dataset_options:
                 new_dataset_options[ext_category] = {}
@@ -187,6 +188,18 @@ def json_dict(job, model_output_fields):
         d.update({
             'dataset_id': job.dataset_id,
         })
+
+    if hasattr(job, 'extension_id'):
+        d.update({
+            'extension': job.extension_id,
+        })
+    else:
+        if hasattr(job, 'dataset_id'):
+            ds = scheduler.get_job(job.dataset_id)
+            if ds and hasattr(ds, 'extension_id'):
+                d.update({
+                    'extension': ds.extension_id,
+                })
 
     if isinstance(job, dataset.DatasetJob):
         d.update({'type': 'dataset'})
@@ -622,6 +635,10 @@ def handle_error(e):
             details['trace'] = trace.split('\n')
         return flask.jsonify({'error': details}), status_code
     else:
+        message = message.replace('\\n', '<br />')
+        if isinstance(e, digits.frameworks.errors.NetworkVisualizationError):
+            trace = message
+            message = ''
         return flask.render_template('error.html',
                                      title=error_type,
                                      message=message,

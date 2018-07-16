@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2014-2017, NVIDIA CORPORATION.  All rights reserved.
 from __future__ import absolute_import
 
 from collections import OrderedDict
@@ -107,7 +107,7 @@ class Scheduler:
         self.resources = {
             # TODO: break this into CPU cores, memory usage, IO usage, etc.
             'parse_folder_task_pool': [Resource()],
-            'create_db_task_pool': [Resource(max_value=2)],
+            'create_db_task_pool': [Resource(max_value=4)],
             'analyze_db_task_pool': [Resource(max_value=4)],
             'inference_task_pool': [Resource(max_value=4)],
             'gpus': [Resource(identifier=index)

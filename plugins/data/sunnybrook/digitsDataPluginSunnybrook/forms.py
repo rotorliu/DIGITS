@@ -1,4 +1,4 @@
-# Copyright (c) 2016, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2016-2017, NVIDIA CORPORATION.  All rights reserved.
 from __future__ import absolute_import
 
 import os
@@ -86,7 +86,7 @@ class InferenceForm(Form):
         validators=[
             validate_file_path,
         ],
-        tooltip="Provide an image"
+        tooltip="Provide the (server) path to an image."
     )
 
     validation_record = utils.forms.SelectField(

@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2016, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2015-2017, NVIDIA CORPORATION.  All rights reserved.
 from __future__ import absolute_import
 
 import imp
@@ -19,8 +19,12 @@ def load_from_envvar(envvar):
     """
     value = os.environ[envvar].strip().strip("\"' ")
 
-    executable_dir = os.path.join(value, 'build', 'tools')
-    python_dir = os.path.join(value, 'python')
+    if platform.system() == 'Windows':
+        executable_dir = os.path.join(value, 'install', 'bin')
+        python_dir = os.path.join(value, 'install', 'python')
+    else:
+        executable_dir = os.path.join(value, 'build', 'tools')
+        python_dir = os.path.join(value, 'python')
 
     try:
         executable = find_executable_in_dir(executable_dir)

@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2014-2017, NVIDIA CORPORATION.  All rights reserved.
 from __future__ import absolute_import
 
 from collections import OrderedDict
@@ -27,7 +27,7 @@ from digits.utils.filesystem import tail
 import caffe
 import caffe_pb2
 
-# NOTE: Increment this everytime the pickled object changes
+# NOTE: Increment this every time the pickled object changes
 PICKLE_VERSION = 5
 
 # Constants
@@ -525,8 +525,10 @@ class CaffeTrainTask(TrainTask):
             solver.iter_size = self.batch_accumulation
 
         # Epochs -> Iterations
-        train_iter = int(math.ceil(float(self.dataset.get_entry_count(
-            constants.TRAIN_DB)) / train_data_layer.data_param.batch_size))
+        train_iter = int(math.ceil(
+            float(self.dataset.get_entry_count(constants.TRAIN_DB)) /
+            (train_data_layer.data_param.batch_size * solver.iter_size)
+        ))
         solver.max_iter = train_iter * self.train_epochs
         snapshot_interval = self.snapshot_interval * train_iter
         if 0 < snapshot_interval <= 1:
@@ -598,7 +600,7 @@ class CaffeTrainTask(TrainTask):
         # Display 8x per epoch, or once per 5000 images, whichever is more frequent
         solver.display = max(1, min(
             int(math.floor(float(solver.max_iter) / (self.train_epochs * 8))),
-            int(math.ceil(5000.0 / train_data_layer.data_param.batch_size))
+            int(math.ceil(5000.0 / (train_data_layer.data_param.batch_size * solver.iter_size)))
         ))
 
         if self.random_seed is not None:
@@ -753,8 +755,10 @@ class CaffeTrainTask(TrainTask):
             solver.iter_size = self.batch_accumulation
 
         # Epochs -> Iterations
-        train_iter = int(math.ceil(float(self.dataset.get_entry_count(constants.TRAIN_DB)) /
-                                   train_image_data_layer.data_param.batch_size))
+        train_iter = int(math.ceil(
+            float(self.dataset.get_entry_count(constants.TRAIN_DB)) /
+            (train_image_data_layer.data_param.batch_size * solver.iter_size)
+        ))
         solver.max_iter = train_iter * self.train_epochs
         snapshot_interval = self.snapshot_interval * train_iter
         if 0 < snapshot_interval <= 1:
@@ -821,7 +825,7 @@ class CaffeTrainTask(TrainTask):
         # Display 8x per epoch, or once per 5000 images, whichever is more frequent
         solver.display = max(1, min(
             int(math.floor(float(solver.max_iter) / (self.train_epochs * 8))),
-            int(math.ceil(5000.0 / train_image_data_layer.data_param.batch_size))
+            int(math.ceil(5000.0 / (train_image_data_layer.data_param.batch_size * solver.iter_size)))
         ))
 
         if self.random_seed is not None:
@@ -930,8 +934,7 @@ class CaffeTrainTask(TrainTask):
                 args.append('--gpu=%s' % identifiers[0])
             elif len(identifiers) > 1:
                 if config_value('caffe')['flavor'] == 'NVIDIA':
-                    if (utils.parse_version(config_value('caffe')['version'])
-                            < utils.parse_version('0.14.0-alpha')):
+                    if (utils.parse_version(config_value('caffe')['version']) < utils.parse_version('0.14.0-alpha')):
                         # Prior to version 0.14, NVcaffe used the --gpus switch
                         args.append('--gpus=%s' % ','.join(identifiers))
                     else:
@@ -1152,7 +1155,8 @@ class CaffeTrainTask(TrainTask):
             "solver file": self.solver_file,
             "train_val file": self.train_val_file,
             "deploy file": self.deploy_file,
-            "framework": "caffe"
+            "framework": "caffe",
+            "mean subtraction": self.use_mean
         }
 
         # These attributes only available in more recent jobs:
@@ -1359,13 +1363,17 @@ class CaffeTrainTask(TrainTask):
                         if top in net.blobs and top not in added_activations:
                             data = net.blobs[top].data[0]
                             normalize = True
-                            # don't normalize softmax layers
+                            # don't normalize softmax layers but scale by 255 to fill image range
                             if layer.type == 'Softmax':
-                                normalize = False
-                            vis = utils.image.get_layer_vis_square(data,
-                                                                   normalize=normalize,
-                                                                   allow_heatmap=bool(top != 'data'),
-                                                                   channel_order='BGR')
+                                vis = utils.image.get_layer_vis_square(data * 255,
+                                                                       normalize=False,
+                                                                       allow_heatmap=bool(top != 'data'),
+                                                                       channel_order='BGR')
+                            else:
+                                vis = utils.image.get_layer_vis_square(data,
+                                                                       normalize=normalize,
+                                                                       allow_heatmap=bool(top != 'data'),
+                                                                       channel_order='BGR')
                             mean, std, hist = self.get_layer_statistics(data)
                             visualizations.append(
                                 {

@@ -1,4 +1,4 @@
-# Copyright (c) 2016, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2016-2017, NVIDIA CORPORATION.  All rights reserved.
 from __future__ import absolute_import
 
 from . import tasks
@@ -26,6 +26,11 @@ class InferenceJob(Job):
         # get handle to framework object
         fw_id = model.train_task().framework_id
         fw = digits.frameworks.get_framework_by_id(fw_id)
+
+        if fw is None:
+            raise RuntimeError(
+                'The "%s" framework cannot be found. Check your server configuration.'
+                % fw_id)
 
         # create inference task
         self.tasks.append(fw.create_inference_task(

@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2014-2017, NVIDIA CORPORATION.  All rights reserved.
 from __future__ import absolute_import
 
 import os
@@ -14,7 +14,7 @@ from .status import Status, StatusCls
 from digits.config import config_value
 from digits.utils import sizeof_fmt, filesystem as fs
 
-# NOTE: Increment this everytime the pickled object changes
+# NOTE: Increment this every time the pickled object changes
 PICKLE_VERSION = 2
 
 
@@ -43,6 +43,7 @@ class Job(StatusCls):
                 if isinstance(task, TrainTask):
                     # can't call this until the job_dir is set
                     task.detect_snapshots()
+                    task.detect_timeline_traces()
             return job
 
     def __init__(self, name, username, group='', persistent=True):

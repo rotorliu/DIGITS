@@ -1,10 +1,10 @@
-# Copyright (c) 2016, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2016-2017, NVIDIA CORPORATION.  All rights reserved.
 from __future__ import absolute_import
 import os
 
 from digits.job import Job
 from digits.utils import subclass, override
-from digits.pretrained_model.tasks import CaffeUploadTask, TorchUploadTask
+from digits.pretrained_model.tasks import CaffeUploadTask, TorchUploadTask, TensorflowUploadTask
 
 
 @subclass
@@ -37,8 +37,12 @@ class PretrainedModelJob(Job):
 
         if self.framework == "caffe":
             self.tasks.append(CaffeUploadTask(**taskKwargs))
-        else:
+        elif self.framework == "torch":
             self.tasks.append(TorchUploadTask(**taskKwargs))
+        elif self.framework == "tensorflow":
+            self.tasks.append(TensorflowUploadTask(**taskKwargs))
+        else:
+            raise Exception("framework of type " + self.framework + " is not supported")
 
     def get_weights_path(self):
         return self.tasks[0].get_weights_path()

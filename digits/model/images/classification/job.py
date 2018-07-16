@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2014-2017, NVIDIA CORPORATION.  All rights reserved.
 from __future__ import absolute_import
 
 import os.path
@@ -6,7 +6,7 @@ import os.path
 from ..job import ImageModelJob
 from digits.utils import subclass, override
 
-# NOTE: Increment this everytime the pickled object changes
+# NOTE: Increment this every time the pickled object changes
 PICKLE_VERSION = 1
 
 
@@ -25,10 +25,12 @@ class ImageClassificationModelJob(ImageModelJob):
         return 'Image Classification Model'
 
     @override
-    def download_files(self, epoch=-1):
+    def download_files(self, epoch=-1, frozen_file=False):
         task = self.train_task()
-
-        snapshot_filename = task.get_snapshot(epoch)
+        if frozen_file:
+            snapshot_filenames = task.get_snapshot(epoch, frozen_file=True)
+        else:
+            snapshot_filenames = task.get_snapshot(epoch, download=True)
 
         # get model files
         model_files = task.get_model_files()
@@ -40,9 +42,15 @@ class ImageClassificationModelJob(ImageModelJob):
             (task.dataset.path(task.dataset.labels_file),
              os.path.basename(task.dataset.labels_file)),
             (task.dataset.path(task.dataset.get_mean_file()),
-             os.path.basename(task.dataset.get_mean_file())),
-            (snapshot_filename,
-             os.path.basename(snapshot_filename)),
+             os.path.basename(task.dataset.get_mean_file()))
         ])
+
+        if not isinstance(snapshot_filenames, list):
+            download_files.append((snapshot_filenames,
+                                  os.path.basename(snapshot_filenames)))
+        else:
+            for snapshot_filename in snapshot_filenames:
+                download_files.append((snapshot_filename,
+                                       os.path.basename(snapshot_filename)))
 
         return download_files
